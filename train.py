@@ -9,7 +9,7 @@ from datetime import datetime
 import numpy as np
 from utils import show_images
 
-def predict(model, dl1, criterion=None):
+def predict(model, dl1, criterion=None, device = 'cpu'):
     model.eval()
     val_loss = 0.0
     preds = []
@@ -73,10 +73,10 @@ if __name__=="__main__":
     # model.to(device)
 
     #Load model
-    model_path = "/home/po/MTech/2ndsem/cv/a2/models/simplecnn_cuda2025-04-03 09_22_51.379508.pth"
+    model_path = "/home/po/MTech/2ndsem/cv/a2/models/simplecnn_cuda2025-04-03 13_15_58.157753.pth"
     model.load_state_dict(torch.load(model_path,weights_only=True, map_location=device))
 
-    preds, testloss = predict(model, dl[2],criterion=cbc)
+    preds, testloss = predict(model, dl[2],criterion=cbc, device = device)
     
     # showing random predictions
     images = []
@@ -88,6 +88,6 @@ if __name__=="__main__":
         pred = pred.detach().squeeze(0).numpy()
         label = label.squeeze(0).numpy()
         images.append([img, pred, label])
-    show_images(images)
+    show_images(images, "predictions/SimpleCNN predictions")
     
 
