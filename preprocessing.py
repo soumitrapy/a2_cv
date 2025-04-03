@@ -1,5 +1,6 @@
 import os
-from torch.utils.data import Dataset
+import torch
+from torch.utils.data import Dataset,DataLoader
 from PIL import Image
 from scipy.io import loadmat
 import numpy as np
@@ -12,7 +13,7 @@ class BSD500Dataset(Dataset):
 
     SPLITS = ['train', 'test', 'val']
 
-    def __init__(self, root, split='train', label='BOUNDARY'):
+    def __init__(self, root, split='train', label='BOUNDARY', transform=None, target_transform=None):
         '''
 
         :param root: root directory of the dataset (parent dir of the actual data)
@@ -25,6 +26,8 @@ class BSD500Dataset(Dataset):
         self.split = split
         self.root = root
         self.label_type = label
+        self.transform = transform
+        self.target_transform = target_transform
 
         self.images_dir = os.path.join(self.root, 'data', 'images', self.split)
         if not os.path.isdir(self.images_dir):  # in case you passed the base of the unzipped data as root
@@ -55,10 +58,21 @@ class BSD500Dataset(Dataset):
 
         image = np.array(Image.open(img_path).convert('RGB'))
         raw_gt = loadmat(gt_path)
-        
         gTruth = raw_gt['groundTruth'][0][0][0][0][self.LABEL_TYPES.index(self.label_type)]
-        item_data = {'image': image, 'gTruth':gTruth, 'im_path': img_path, 'gt_path': gt_path}
-        return item_data
+        if image.shape==(481,321,3):
+            image = image.reshape((321,481,3))
+            gTruth = gTruth.reshape((321,481))
+        assert gTruth.shape == (321,481)
+        image = Image.fromarray(image)
+        gTruth = Image.fromarray(gTruth)
+        
+        if self.transform:
+            image = self.transform(image)
+        if self.target_transform:
+            gTruth = self.target_transform(gTruth)
+
+        #item_data = {'image': image, 'gTruth':gTruth, 'im_path': img_path, 'gt_path': gt_path}
+        return image, gTruth
 
     def __len__(self):
         return self.num_samples
@@ -66,7 +80,14 @@ class BSD500Dataset(Dataset):
 
 if __name__ == "__main__":
     dataset_root = './BSR/BSDS500'
-    ds = BSD500Dataset(root=dataset_root, split='test', label='BOUNDARY')
-    t = ds.__getitem__(0)
-    print(t)
+
+    from torchvision import transforms
+    transform = transforms.Compose([
+    transforms.Resize((224,224)),
+    transforms.ToTensor(),
+    ])
+    target_transform = transforms.ToTensor()
+    ds = BSD500Dataset(root=dataset_root, split='test', label='BOUNDARY', transform=transform, target_transform=target_transform)
+    dl = DataLoader(ds, batch_size=10)
+    
     
