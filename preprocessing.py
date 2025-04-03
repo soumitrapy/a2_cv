@@ -1,9 +1,11 @@
 import os
 import torch
 from torch.utils.data import Dataset,DataLoader
+from torchvision import transforms
 from PIL import Image
 from scipy.io import loadmat
 import numpy as np
+import matplotlib.pyplot as plt
 
 class BSD500Dataset(Dataset):
     IMAGE_PATH, GT_PATH = 'IMAGE_PATH', 'GT_PATH'
@@ -56,15 +58,15 @@ class BSD500Dataset(Dataset):
         img_path = paths[self.IMAGE_PATH]
         gt_path = paths[self.GT_PATH]
 
-        image = np.array(Image.open(img_path).convert('RGB'))
+        image = Image.open(img_path).convert('RGB')
         raw_gt = loadmat(gt_path)
         gTruth = raw_gt['groundTruth'][0][0][0][0][self.LABEL_TYPES.index(self.label_type)]
-        if image.shape==(481,321,3):
-            image = image.reshape((321,481,3))
-            gTruth = gTruth.reshape((321,481))
-        assert gTruth.shape == (321,481)
-        image = Image.fromarray(image)
         gTruth = Image.fromarray(gTruth)
+        if image.size == (481,321):
+            image = image.rotate(90,expand=True)
+            gTruth = gTruth.rotate(90, expand=True)
+
+        assert gTruth.size == (321,481)
         
         if self.transform:
             image = self.transform(image)
@@ -77,17 +79,27 @@ class BSD500Dataset(Dataset):
     def __len__(self):
         return self.num_samples
 
+def load_data(dataset_root = './BSR/BSDS500', transform=None, target_transform=None):
+    parts = ['train', 'val', 'test']
+    ds = []
+    dl = []
+    for s in parts:
+        ds1 = BSD500Dataset(root=dataset_root, split=s, label='BOUNDARY', transform=transform, target_transform=target_transform)
+        dl1 = DataLoader(ds1, batch_size=10)
+        ds.append(ds1)
+        dl.append(dl1)
+    return ds, dl
 
 if __name__ == "__main__":
     dataset_root = './BSR/BSDS500'
 
     from torchvision import transforms
     transform = transforms.Compose([
-    transforms.Resize((224,224)),
     transforms.ToTensor(),
     ])
     target_transform = transforms.ToTensor()
-    ds = BSD500Dataset(root=dataset_root, split='test', label='BOUNDARY', transform=transform, target_transform=target_transform)
-    dl = DataLoader(ds, batch_size=10)
+    ds = BSD500Dataset(root=dataset_root, split='test', label='BOUNDARY')#, transform=transform, target_transform=target_transform)
+    #dl = DataLoader(ds, batch_size=10)
+    ds[5]
     
     
