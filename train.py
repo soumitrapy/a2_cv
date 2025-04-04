@@ -9,8 +9,7 @@ import numpy as np
 from utils import show_images
 
 from models.simplecnn import SimpleCNN
-from models.loss import CBCLoss
-from models.hed import HED
+from models.hed import HED, CBCLoss
 
 def predict(model, dl1, criterion=None, device = 'cpu'):
     model.eval()
@@ -29,6 +28,7 @@ def predict(model, dl1, criterion=None, device = 'cpu'):
 
     predictions = torch.cat(preds)
     return predictions, val_loss
+
 # Training loop
 def train_model(model, dl, optimizer, criterion, num_epochs=100, device='cpu'):
     model.to(device)
@@ -47,14 +47,7 @@ def train_model(model, dl, optimizer, criterion, num_epochs=100, device='cpu'):
             train_loss += loss.item()
 
         # Validation phase
-        model.eval()
-        val_loss = 0.0
-        with torch.no_grad():
-            for images, labels in dl[1]:
-                images, labels = images.to(device), labels.to(device)
-                outputs = model(images)
-                loss = criterion(outputs, labels)
-                val_loss += loss.item()
+        _, val_loss = predict(model, dl[1], criterion=criterion, device = device)
         print(f"Epoch [{epoch+1}/{num_epochs}] - Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
     print("Training complete!")
 
@@ -70,11 +63,6 @@ if __name__=="__main__":
     cbc = CBCLoss()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # # Save Model 
-    # model.to('cpu')
-    # model_name = 'simplecnn_'+device.type+str(datetime.now())+'.pth'
-    # torch.save(model.state_dict(), 'models/'+model_name)
-    # model.to(device)
 
     #Load model
     model_path = "/home/po/MTech/2ndsem/cv/a2/models/simplecnn_cuda2025-04-03 13_15_58.157753.pth"

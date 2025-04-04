@@ -11,3 +11,9 @@ def show_images(images, figname="predictions/SimpleCNN predictions"):
     plt.tight_layout()
     plt.savefig(figname)
     plt.show()
+
+def save_model(model, path):
+	device = torch.device('cuda' if next(model.parameters()).is_cuda else 'cpu')
+	model.to('cpu')
+	torch.save(model.state_dict(), path)
+	model.to(device)

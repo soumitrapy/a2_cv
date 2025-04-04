@@ -61,6 +61,7 @@ class BSD500Dataset(Dataset):
         image = Image.open(img_path).convert('RGB')
         raw_gt = loadmat(gt_path)
         gTruth = raw_gt['groundTruth'][0][0][0][0][self.LABEL_TYPES.index(self.label_type)]
+        gTruth = (gTruth>0).astype(float)
         gTruth = Image.fromarray(gTruth)
         if image.size == (481,321):
             image = image.rotate(90,expand=True)
