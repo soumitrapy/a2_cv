@@ -60,8 +60,12 @@ class CBCLoss(nn.Module):
         super().__init__()
 
     def forward(self, p, y):
+        beta = torch.sum(1-y, dim = (1,2,3))/torch.sum(torch.ones_like(y), dim = (1,2,3))
+        s1 = y*torch.log(p)
+        s2 = (1-y)*torch.log(1-p)
         b = (1-torch.sum(y))/torch.sum(torch.ones_like(y))
         loss = torch.sum(-b*torch.log(p)*y-(1-b)*torch.log(1-p)*(1-y))
+        torch.log(p)
         return loss
 
 class HEDLoss(nn.Module):
