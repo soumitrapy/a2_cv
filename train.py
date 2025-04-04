@@ -68,7 +68,7 @@ if __name__=="__main__":
     print(device)
 
     # Model training
-    train_model(model, dl, optimizer, criterion=hdeloss, num_epochs=10, device=device)
+    train_model(model, dl, optimizer, criterion=hdeloss, num_epochs=2, device=device)
     model_path = save_model(model, 'checkpoints/')
 
     # #Load model

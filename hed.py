@@ -7,13 +7,13 @@ class HED(nn.Module):
 	def __init__(self, pretrained=False):
 		super().__init__()
 		weights = VGG16_BN_Weights.DEFAULT if pretrained else None
-		vgg = vgg16_bn(weights=weights)
+		self.vgg = vgg16_bn(weights=weights)
 		self.features = vgg.features
 		self.convs = []
 		sub_nums = [0, 6, 13, 23, 33, 43]
 		for i in range(len(sub_nums)-1):
 			self.convs.append(nn.Sequential(
-				*list(vgg.features.children())[sub_nums[i]:sub_nums[i+1]]
+				*list(self.vgg.features.children())[sub_nums[i]:sub_nums[i+1]]
 			))
 		out_channels = [64, 128, 256, 512, 512]
 		self.sides = []
