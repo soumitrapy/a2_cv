@@ -9,27 +9,30 @@ class HED(nn.Module):
 		weights = VGG16_BN_Weights.DEFAULT if pretrained else None
 		self.vgg = vgg16_bn(weights=weights)
 		self.features = vgg.features
-		self.convs = []
-		sub_nums = [0, 6, 13, 23, 33, 43]
-		for i in range(len(sub_nums)-1):
-			self.convs.append(nn.Sequential(
-				*list(self.vgg.features.children())[sub_nums[i]:sub_nums[i+1]]
-			))
-		out_channels = [64, 128, 256, 512, 512]
-		self.sides = []
-		for i in out_channels:
-			self.sides.append(nn.Sequential(
-				nn.Conv2d(i, 1, 1),
-				nn.BatchNorm2d(1),
-				nn.ReLU(),
-			))
+		self.conv1 = nn.Sequential(*list(self.vgg.features.children())[0:6])
+		self.conv2 = nn.Sequential(*list(self.vgg.features.children())[6:13])
+		self.conv3 = nn.Sequential(*list(self.vgg.features.children())[13:23])
+		self.conv4 = nn.Sequential(*list(self.vgg.features.children())[23:33])
+		self.conv5 = nn.Sequential(*list(self.vgg.features.children())[33:43])
+		self.convs = [self.conv1, self.conv2, self.conv3, self.conv4, self.conv5]
+
+		self.side1 = nn.Sequential(nn.Conv2d(64, 1, 1), nn.BatchNorm2d(1), nn.ReLU())
+		self.side2 = nn.Sequential(nn.Conv2d(128, 1, 1), nn.BatchNorm2d(1), nn.ReLU())
+		self.side3 = nn.Sequential(nn.Conv2d(256, 1, 1), nn.BatchNorm2d(1), nn.ReLU())
+		self.side4 = nn.Sequential(nn.Conv2d(512, 1, 1), nn.BatchNorm2d(1), nn.ReLU())
+		self.side5 = nn.Sequential(nn.Conv2d(512, 1, 1), nn.BatchNorm2d(1), nn.ReLU())
+		self.sides = [self.side1, self.side2, self.side3, self.side4, self.side5]
 		assert len(self.sides)==len(self.convs)
-		ups_kernel_sizes = [4,8,16,32]
-		assert len(ups_kernel_sizes)==len(self.convs)-1
-		self.upsamples = [None]
-		for k in ups_kernel_sizes:
-			self.upsamples.append(nn.ConvTranspose2d(in_channels=1,out_channels=1,kernel_size=k,stride=k//2))
+
+		self.ups1 = nn.ConvTranspose2d(in_channels=1,out_channels=1,kernel_size=4,stride=2)
+		self.ups2 = nn.ConvTranspose2d(in_channels=1,out_channels=1,kernel_size=8,stride=4)
+		self.ups3 = nn.ConvTranspose2d(in_channels=1,out_channels=1,kernel_size=16,stride=8)
+		self.ups4 = nn.ConvTranspose2d(in_channels=1,out_channels=1,kernel_size=32,stride=16)
+		self.upsamples = [None, self.ups1, self.ups2, self.ups3, self.ups4]
+		assert len(self.upsamples)==len(self.convs)
+
 		self.fuse = nn.Sequential(nn.Conv2d(5,1,1), nn.Sigmoid())
+
 	def crop(self, x, h, w):
 		xh, xw = x.shape[2:]
 		assert xh>=h and xw>=w
