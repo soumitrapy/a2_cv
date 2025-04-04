@@ -61,12 +61,14 @@ class CBCLoss(nn.Module):
 
     def forward(self, p, y):
         beta = torch.sum(1-y, dim = (1,2,3))/torch.sum(torch.ones_like(y), dim = (1,2,3))
-        s1 = y*torch.log(p)
-        s2 = (1-y)*torch.log(1-p)
-        b = (1-torch.sum(y))/torch.sum(torch.ones_like(y))
-        loss = torch.sum(-b*torch.log(p)*y-(1-b)*torch.log(1-p)*(1-y))
-        torch.log(p)
+        s1 = (y*torch.log(p)).sum(dim=(1,2,3))
+        s2 = ((1-y)*torch.log(1-p)).sum(dim=(1,2,3))
+        loss = torch.sum(beta*s1+(1-beta)*s2)/s1.shape[0]
         return loss
+        # b = (1-torch.sum(y))/torch.sum(torch.ones_like(y))
+        # loss = torch.sum(-b*torch.log(p)*y-(1-b)*torch.log(1-p)*(1-y))
+        # torch.log(p)
+        # return loss
 
 class HEDLoss(nn.Module):
 	def __init__(self, alpha = [1,2,3,4,5]):
