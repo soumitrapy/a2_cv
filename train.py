@@ -6,10 +6,10 @@ from torch.optim import Adam
 from tqdm import tqdm
 from datetime import datetime
 import numpy as np
-from utils import show_images
+from utils import show_images, save_model
 
 from models.simplecnn import SimpleCNN
-from models.hed import HED, CBCLoss
+from hed import HED, CBCLoss, HEDLoss
 
 def predict(model, dl1, criterion=None, device = 'cpu'):
     model.eval()
@@ -52,23 +52,31 @@ def train_model(model, dl, optimizer, criterion, num_epochs=100, device='cpu'):
     print("Training complete!")
 
 if __name__=="__main__":
+    # Data Loading
     from torchvision import transforms
-    transform = transforms.Compose([
-    transforms.ToTensor(),
-    ])
+    transform = transforms.ToTensor()
     target_transform = transforms.ToTensor()
     ds, dl = load_data(dataset_root = './BSR/BSDS500',transform=transform, target_transform=target_transform)
-    model = SimpleCNN()
+
+
+    # Model and other things initialization
+    model = HED()
     optimizer = Adam(model.parameters(), lr=1e-4)
-    cbc = CBCLoss()
+    #cbc = CBCLoss()
+    hdeloss = HEDLoss()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(device)
 
+    # Model training
+    train_model(model, dl, optimizer, criterion=hdeloss, num_epochs=10, device=device)
+    model_path = save_model(model, 'checkpoints/')
 
-    #Load model
-    model_path = "/home/po/MTech/2ndsem/cv/a2/models/simplecnn_cuda2025-04-03 13_15_58.157753.pth"
-    model.load_state_dict(torch.load(model_path,weights_only=True, map_location=device))
+    # #Load model
+    # model_path = "/home/po/MTech/2ndsem/cv/a2/models/simplecnn_cuda2025-04-03 13_15_58.157753.pth"
+    # model.load_state_dict(torch.load(model_path,weights_only=True, map_location=device))
 
-    preds, testloss = predict(model, dl[2],criterion=cbc, device = device)
+    preds, testloss = predict(model, dl[2],criterion=hdeloss, device = device)
+
     
     # showing random predictions
     images = []
@@ -80,6 +88,6 @@ if __name__=="__main__":
         pred = pred.detach().squeeze(0).numpy()
         label = label.squeeze(0).numpy()
         images.append([img, pred, label])
-    show_images(images, "predictions/SimpleCNN predictions")
+    show_images(images, "predictions/hed1_predictions.jpg")
     
 

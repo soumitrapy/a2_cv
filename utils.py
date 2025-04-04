@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
-def show_images(images, figname="predictions/SimpleCNN predictions"):
+from datetime import datetime
+def show_images(images, figname="predictions/SimpleCNN_predictions.jpg"):
     n, k = len(images), len(images[0])
     fig, axes = plt.subplots(n, k, figsize=(10, 50))
     
@@ -12,8 +13,11 @@ def show_images(images, figname="predictions/SimpleCNN predictions"):
     plt.savefig(figname)
     plt.show()
 
-def save_model(model, path):
+def save_model(model, dest):
 	device = torch.device('cuda' if next(model.parameters()).is_cuda else 'cpu')
 	model.to('cpu')
+	path = dest+type(model).__name__+device.type+str(datetime.now())+'.pth'
 	torch.save(model.state_dict(), path)
+	print(f"model saved to {path}")
 	model.to(device)
+	return path

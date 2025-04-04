@@ -21,7 +21,7 @@ class HED(nn.Module):
 			self.sides.append(nn.Sequential(
 				nn.Conv2d(i, 1, 1),
 				nn.BatchNorm2d(1),
-				nn.Sigmoid()
+				nn.ReLU(),
 			))
 		assert len(self.sides)==len(self.convs)
 		ups_kernel_sizes = [4,8,16,32]
@@ -29,7 +29,6 @@ class HED(nn.Module):
 		self.upsamples = [None]
 		for k in ups_kernel_sizes:
 			self.upsamples.append(nn.ConvTranspose2d(in_channels=1,out_channels=1,kernel_size=k,stride=k//2))
-			
 		self.fuse = nn.Sequential(nn.Conv2d(5,1,1), nn.Sigmoid())
 	def crop(self, x, h, w):
 		xh, xw = x.shape[2:]
@@ -47,7 +46,7 @@ class HED(nn.Module):
 			side_out = side(conv_out)
 			if upsample:
 				side_out=upsample(side_out)
-			side_out = self.crop(side_out, h, w)
+			side_out = F.sigmoid(self.crop(side_out, h, w))
 			outputs.append(side_out)
 			x = conv_out
 		yfuse = self.fuse(torch.cat(outputs, axis=1))
@@ -60,10 +59,11 @@ class CBCLoss(nn.Module):
         super().__init__()
 
     def forward(self, p, y):
+        eps = 1e-20
         beta = torch.sum(1-y, dim = (1,2,3))/torch.sum(torch.ones_like(y), dim = (1,2,3))
-        s1 = (y*torch.log(p)).sum(dim=(1,2,3))
-        s2 = ((1-y)*torch.log(1-p)).sum(dim=(1,2,3))
-        loss = torch.sum(beta*s1+(1-beta)*s2)/s1.shape[0]
+        s1 = (y*torch.log(p+eps)).sum(dim=(1,2,3))
+        s2 = ((1-y)*torch.log(1-p+eps)).sum(dim=(1,2,3))
+        loss = -torch.sum(beta*s1+(1-beta)*s2)/s1.shape[0]
         return loss
         # b = (1-torch.sum(y))/torch.sum(torch.ones_like(y))
         # loss = torch.sum(-b*torch.log(p)*y-(1-b)*torch.log(1-p)*(1-y))
@@ -80,7 +80,7 @@ class HEDLoss(nn.Module):
 		lside = 0.0
 		for i in range(len(outputs)-1):
 			lside += self.alpha[i]*self.cbc(outputs[i],y)
-			print(lside)
+			#print(lside)
 		lfuse = F.binary_cross_entropy(outputs[-1], y)
 		return lside + (max(self.alpha)+1)*lfuse
 
@@ -100,10 +100,10 @@ if __name__=="__main__":
     hedloss = HEDLoss()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    for images, labels in dl[0]:
+    for images, y in dl[0]:
         #print(images.shape, labels.shape)
         pred = m(images)
-        print("loss:",hedloss(pred, labels))
+        print("loss:",hedloss(pred, y))
         break
     # print(len(pred))
     # for x in pred:
