@@ -1,7 +1,7 @@
 *.tgz
 BSR/
 play*
-models/
+saved_models/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

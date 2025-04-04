@@ -70,6 +70,7 @@ if __name__=="__main__":
     # # Save Model 
     # model.to('cpu')
     # model_name = 'simplecnn_'+device.type+str(datetime.now())+'.pth'
+    # torch.save(model.state_dict(), 'models/'+model_name)
     # model.to(device)
 
     #Load model
