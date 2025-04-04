@@ -1,5 +1,4 @@
 from preprocessing import BSD500Dataset, load_data
-from models import SimpleCNN, CBCLoss
 from torch.utils.data import DataLoader
 from torchvision import transforms
 import torch
@@ -8,6 +7,10 @@ from tqdm import tqdm
 from datetime import datetime
 import numpy as np
 from utils import show_images
+
+from models.simplecnn import SimpleCNN
+from models.loss import CBCLoss
+from models.hed import HED
 
 def predict(model, dl1, criterion=None, device = 'cpu'):
     model.eval()
