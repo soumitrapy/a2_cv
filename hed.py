@@ -7,13 +7,13 @@ class HED(nn.Module):
 	def __init__(self, pretrained=False):
 		super().__init__()
 		weights = VGG16_BN_Weights.DEFAULT if pretrained else None
-		self.vgg = vgg16_bn(weights=weights)
-		self.features = self.vgg.features
-		self.conv1 = nn.Sequential(*list(self.vgg.features.children())[0:6])
-		self.conv2 = nn.Sequential(*list(self.vgg.features.children())[6:13])
-		self.conv3 = nn.Sequential(*list(self.vgg.features.children())[13:23])
-		self.conv4 = nn.Sequential(*list(self.vgg.features.children())[23:33])
-		self.conv5 = nn.Sequential(*list(self.vgg.features.children())[33:43])
+		vgg = vgg16_bn(weights=weights)
+		self.features = vgg.features
+		self.conv1 = nn.Sequential(*list(vgg.features.children())[0:6])
+		self.conv2 = nn.Sequential(*list(vgg.features.children())[6:13])
+		self.conv3 = nn.Sequential(*list(vgg.features.children())[13:23])
+		self.conv4 = nn.Sequential(*list(vgg.features.children())[23:33])
+		self.conv5 = nn.Sequential(*list(vgg.features.children())[33:43])
 		self.convs = [self.conv1, self.conv2, self.conv3, self.conv4, self.conv5]
 
 		self.side1 = nn.Sequential(nn.Conv2d(64, 1, 1), nn.BatchNorm2d(1), nn.ReLU())
