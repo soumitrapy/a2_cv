@@ -8,7 +8,7 @@ class HED(nn.Module):
 		super().__init__()
 		weights = VGG16_BN_Weights.DEFAULT if pretrained else None
 		self.vgg = vgg16_bn(weights=weights)
-		self.features = vgg.features
+		self.features = self.vgg.features
 		self.conv1 = nn.Sequential(*list(self.vgg.features.children())[0:6])
 		self.conv2 = nn.Sequential(*list(self.vgg.features.children())[6:13])
 		self.conv3 = nn.Sequential(*list(self.vgg.features.children())[13:23])
