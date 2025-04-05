@@ -3,6 +3,9 @@ from datetime import datetime
 import torch
 import os
 import numpy as np
+from PIL import Image
+from scipy.io import loadmat
+
 
 def show_images(images, figname="predictions/SimpleCNN_predictions.jpg"):
     n, k = len(images), len(images[0])
@@ -15,11 +18,24 @@ def show_images(images, figname="predictions/SimpleCNN_predictions.jpg"):
     plt.tight_layout()
     plt.savefig(figname)
     plt.show()
-def show_predictions(pred_images,images, labels, k=10):
+def show_predictions(pred_images,images, labels, k=10, figname='sample_predictions.jpg', figsize=(10,50)):
     indices = np.random.choice(np.arange(len(pred_images)), k)
-    for i in indices:
-        pred = pred_images[i]
-    pass
+    fig, axes = plt.subplots(k, 3, figsize=figsize)
+    for i, j in enumerate(indices):
+        img = np.array(Image.open(images[j]))
+        pred = np.array(Image.open(pred_images[j]))
+        if pred.shape!=img.shape:
+            pred = np.array(Image.open(pred_images[j]).rotate(-90,expand=True))
+        axes[i,0].imshow(img)
+        axes[i,1].imshow(pred)
+        raw_gt = loadmat(labels[j])
+        gTruth = raw_gt['groundTruth'][0][0][0][0][1]
+        gTruth = (gTruth>0).astype(float)
+        axes[i,2].imshow(gTruth)
+    plt.tight_layout()
+    plt.savefig(figname)
+    plt.show()
+
     
     
     

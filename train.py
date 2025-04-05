@@ -11,7 +11,7 @@ import os
 import matplotlib.pyplot as plt
 
 from models.simplecnn import SimpleCNN
-from hed import HED, CBCLoss, HEDLoss
+from models.hed import HED, CBCLoss, HEDLoss
 
 def predict(model, dl1, criterion=None, device = 'cpu'):
     model.eval()
@@ -104,12 +104,12 @@ if __name__=="__main__":
     # model_name = train_model(model, dl, optimizer, criterion=hdeloss, num_epochs=30, device=device)
 
     # Load model
-    model_name = "ckpts/HEDcuda2025-04-05 06:4.pth"
+    model_name = "ckpts/HEDcuda2025-04-05 07:5.pth"
     model.load_state_dict(torch.load(model_name,weights_only=True, map_location=device))
     model.to(device)
 
     predicted_images, images, labels = save_predictions(model, dl[2], criterion=hdeloss, device = device)
-    show_predictions(predicted_images, images, labels, 10)
+    show_predictions(predicted_images, images, labels, 10, 'hed_sample_predictions.jpg')
     
     
     # # showing random predictions
