@@ -35,15 +35,15 @@ def train_model(model, dl, optimizer, criterion, num_epochs=100, device='cpu'):
         model.train()
         train_loss = 0.0
 
-        # # Training phase
-        # for images, labels in dl[0]:
-        #     images, labels = images.to(device), labels.to(device)
-        #     optimizer.zero_grad()
-        #     outputs = model(images)
-        #     loss = criterion(outputs, labels)
-        #     loss.backward()
-        #     optimizer.step()
-        #     train_loss += loss.item()
+        # Training phase
+        for images, labels in dl[0]:
+            images, labels = images.to(device), labels.to(device)
+            optimizer.zero_grad()
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            train_loss += loss.item()
 
         # Validation phase
         _, val_loss = predict(model, dl[1], criterion=criterion, device = device)
