@@ -22,9 +22,8 @@ def predict(model, dl1, criterion=None, device = 'cpu'):
             if criterion:
                 loss = criterion(outputs, labels)
                 val_loss += loss.item()
-            else:
-                outputs = outputs.cpu()
-            preds.append(outputs)
+
+            preds.append(outputs[-1])
 
     predictions = torch.cat(preds)
     return predictions, val_loss
@@ -36,15 +35,15 @@ def train_model(model, dl, optimizer, criterion, num_epochs=100, device='cpu'):
         model.train()
         train_loss = 0.0
 
-        # Training phase
-        for images, labels in dl[0]:
-            images, labels = images.to(device), labels.to(device)
-            optimizer.zero_grad()
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-            train_loss += loss.item()
+        # # Training phase
+        # for images, labels in dl[0]:
+        #     images, labels = images.to(device), labels.to(device)
+        #     optimizer.zero_grad()
+        #     outputs = model(images)
+        #     loss = criterion(outputs, labels)
+        #     loss.backward()
+        #     optimizer.step()
+        #     train_loss += loss.item()
 
         # Validation phase
         _, val_loss = predict(model, dl[1], criterion=criterion, device = device)
@@ -75,19 +74,19 @@ if __name__=="__main__":
     # model_path = "/home/po/MTech/2ndsem/cv/a2/models/simplecnn_cuda2025-04-03 13_15_58.157753.pth"
     # model.load_state_dict(torch.load(model_path,weights_only=True, map_location=device))
 
-    preds, testloss = predict(model, dl[2],criterion=hdeloss, device = device)
+    # preds, testloss = predict(model, dl[2],criterion=hdeloss, device = device)
 
     
-    # showing random predictions
-    images = []
-    model.eval()
-    for i in np.random.choice(len(preds), 5, replace=False):
-        img, label = ds[2][i]
-        pred = model(img)
-        img = img.permute(1,2,0).numpy()
-        pred = pred.detach().squeeze(0).numpy()
-        label = label.squeeze(0).numpy()
-        images.append([img, pred, label])
-    show_images(images, "predictions/hed1_predictions.jpg")
+    # # showing random predictions
+    # images = []
+    # model.eval()
+    # for i in np.random.choice(len(preds), 5, replace=False):
+    #     img, label = ds[2][i]
+    #     pred = model(img)
+    #     img = img.permute(1,2,0).numpy()
+    #     pred = pred.detach().squeeze(0).numpy()
+    #     label = label.squeeze(0).numpy()
+    #     images.append([img, pred, label])
+    # show_images(images, "predictions/hed1_predictions.jpg")
     
 
