@@ -7,6 +7,8 @@ from tqdm import tqdm
 from datetime import datetime
 import numpy as np
 from utils import show_images, save_model
+import os
+import matplotlib.pyplot as plt
 
 from models.simplecnn import SimpleCNN
 from hed import HED, CBCLoss, HEDLoss
@@ -14,9 +16,9 @@ from hed import HED, CBCLoss, HEDLoss
 def predict(model, dl1, criterion=None, device = 'cpu'):
     model.eval()
     val_loss = 0.0
-    preds = []
+    preds, imagenames, labelsnames = [], [], []
     with torch.no_grad():
-        for images, labels in dl1:
+        for images, labels, imnames, gTruthnames in dl1:
             images, labels = images.to(device), labels.to(device)
             outputs = model(images)
             if criterion:
@@ -24,9 +26,11 @@ def predict(model, dl1, criterion=None, device = 'cpu'):
                 val_loss += loss.item()
 
             preds.append(outputs[-1])
+            imagenames.extend(imnames)
+            labelsnames.extend(gTruthnames)
 
     predictions = torch.cat(preds)
-    return predictions, val_loss
+    return predictions, val_loss, imagenames, labelsnames
 
 # Training loop
 def train_model(model, dl, optimizer, criterion, num_epochs=100, device='cpu'):
@@ -36,7 +40,7 @@ def train_model(model, dl, optimizer, criterion, num_epochs=100, device='cpu'):
         train_loss = 0.0
 
         # Training phase
-        for images, labels in dl[0]:
+        for images, labels, imnames, gTruthnames in dl[0]:
             images, labels = images.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(images)
@@ -46,9 +50,25 @@ def train_model(model, dl, optimizer, criterion, num_epochs=100, device='cpu'):
             train_loss += loss.item()
 
         # Validation phase
-        _, val_loss = predict(model, dl[1], criterion=criterion, device = device)
+        _, val_loss, _, _ = predict(model, dl[1], criterion=criterion, device = device)
         print(f"Epoch [{epoch+1}/{num_epochs}] - Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
     print("Training complete!")
+
+def save_predictions(model, dl1, criterion=None, device = 'cpu', path='predictions'):
+    os.makedirs(path, exist_ok=True)
+    subdir = type(model).__name__+'_'+device.type+str(datetime.now())[:15]
+    path = os.path.join(path,subdir)
+    os.makedirs(path)
+
+    predictions, testloss, imagenames, labelnames = predict(model, dl1, criterion=criterion, device = device)
+    if criterion:
+        print(f"Loss: {testloss}")
+    for i in range(predictions.shape[0]):
+        img = predictions[i].squeeze(0).cpu().numpy()
+        img_path = path+'/'+imagenames[i].split('/')[-1]
+        plt.imsave(img_path, img)
+    
+    
 
 if __name__=="__main__":
     # Data Loading
@@ -67,13 +87,14 @@ if __name__=="__main__":
     print(device)
 
     # Model training
-    train_model(model, dl, optimizer, criterion=hdeloss, num_epochs=2, device=device)
+    train_model(model, dl, optimizer, criterion=hdeloss, num_epochs=50, device=device)
     model_path = save_model(model, 'checkpoints/')
 
     # #Load model
     # model_path = "/home/po/MTech/2ndsem/cv/a2/models/simplecnn_cuda2025-04-03 13_15_58.157753.pth"
     # model.load_state_dict(torch.load(model_path,weights_only=True, map_location=device))
 
+    save_predictions(model, dl[2], criterion=hdeloss, device = device)
     # preds, testloss = predict(model, dl[2],criterion=hdeloss, device = device)
 
     

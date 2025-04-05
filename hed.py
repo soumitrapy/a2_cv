@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from torchvision.models import vgg16_bn, VGG16_BN_Weights
 
 class HED(nn.Module):
-	def __init__(self, pretrained=False):
+	def __init__(self, pretrained=True):
 		super().__init__()
 		weights = VGG16_BN_Weights.DEFAULT if pretrained else None
 		vgg = vgg16_bn(weights=weights)

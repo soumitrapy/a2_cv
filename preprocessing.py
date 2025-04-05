@@ -63,11 +63,11 @@ class BSD500Dataset(Dataset):
         gTruth = raw_gt['groundTruth'][0][0][0][0][self.LABEL_TYPES.index(self.label_type)]
         gTruth = (gTruth>0).astype(float)
         gTruth = Image.fromarray(gTruth)
-        if image.size == (481,321):
+        if image.size != (481,321):
             image = image.rotate(90,expand=True)
             gTruth = gTruth.rotate(90, expand=True)
 
-        assert gTruth.size == (321,481)
+        assert gTruth.size == (481,321)
         
         if self.transform:
             image = self.transform(image)
@@ -75,7 +75,7 @@ class BSD500Dataset(Dataset):
             gTruth = self.target_transform(gTruth)
 
         #item_data = {'image': image, 'gTruth':gTruth, 'im_path': img_path, 'gt_path': gt_path}
-        return image, gTruth
+        return image, gTruth, img_path, gt_path
 
     def __len__(self):
         return self.num_samples
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     ])
     target_transform = transforms.ToTensor()
     ds = BSD500Dataset(root=dataset_root, split='test', label='BOUNDARY')#, transform=transform, target_transform=target_transform)
-    #dl = DataLoader(ds, batch_size=10)
+    dl = DataLoader(ds, batch_size=10)
     ds[5]
     
     
